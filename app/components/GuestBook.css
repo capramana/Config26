@@ -329,6 +329,10 @@
 }
 
 .guest-book-half--page .guest-book-page {
+  pointer-events: none;
+}
+
+.guest-book-page--dismiss {
   pointer-events: auto;
 }
 

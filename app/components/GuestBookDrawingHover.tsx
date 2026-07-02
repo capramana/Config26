@@ -405,7 +405,7 @@ export function GuestBookHoverProvider({
 
     probeHoverAtRef.current = handlePointerAt;
 
-    const onMove = (event: MouseEvent) => {
+    const onPointerMove = (event: PointerEvent) => {
       lastPointerRef.current = { x: event.clientX, y: event.clientY };
 
       const spread = spreadRef.current;
@@ -426,18 +426,40 @@ export function GuestBookHoverProvider({
       handlePointerAt(clientX, clientY);
     };
 
-    window.addEventListener("mousemove", onMove, { passive: true });
+    const onPointerDown = (event: PointerEvent) => {
+      const spread = spreadRef.current;
+      if (!spread || !(event.target instanceof Node) || !spread.contains(event.target)) {
+        return;
+      }
+
+      const drawingEl = drawingElementUnderPoint(
+        spread,
+        event.clientX,
+        event.clientY,
+      );
+      if (drawingEl) return;
+
+      if (shownDrawingIdRef.current !== null) {
+        scheduleClearHover();
+        return;
+      }
+      clearHover();
+    };
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
     const spread = spreadRef.current;
     if (spread) {
       spread.addEventListener("focusin", onFocusIn);
       spread.addEventListener("focusout", onFocusOut);
+      spread.addEventListener("pointerdown", onPointerDown);
     }
     return () => {
       probeHoverAtRef.current = null;
-      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("pointermove", onPointerMove);
       if (spread) {
         spread.removeEventListener("focusin", onFocusIn);
         spread.removeEventListener("focusout", onFocusOut);
+        spread.removeEventListener("pointerdown", onPointerDown);
       }
       if (hoverDelayTimerRef.current !== null) {
         window.clearTimeout(hoverDelayTimerRef.current);
