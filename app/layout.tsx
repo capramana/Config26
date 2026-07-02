@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     default: "Config26",
     template: "%s · Config26",
   },
-  description: "Conference memento guestbook.",
+  description: "Conference guestbook.",
   robots: {
     index: false,
     follow: false,
