@@ -26,8 +26,10 @@ const MEMENTO_ENTRY_SELECT =
   "id, name, social_type, social_handle, message, drawing_path, submitted_at";
 
 function getSupabaseAdmin() {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Vercel Supabase integration syncs SUPABASE_SECRET_KEY; local .env uses SERVICE_ROLE.
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 
   if (!url || !serviceRoleKey) {
     throw new Error("Supabase is not configured");
