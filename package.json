@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "setup:memento": "node --env-file=.env.local scripts/setup-memento-supabase.mjs",
-    "prefetch:memento-avatars": "node --env-file=.env.local scripts/prefetch-memento-avatars.mjs"
+    "prefetch:memento-avatars": "node --env-file=.env.local scripts/prefetch-memento-avatars.mjs",
+    "deploy:vercel": "node --env-file=.env.local scripts/trigger-vercel-deploy.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
