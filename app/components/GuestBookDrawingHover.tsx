@@ -88,6 +88,7 @@ export function GuestBookHoverProvider({
   const leaveGraceTimerRef = useRef<number | null>(null);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
   const probeHoverAtRef = useRef<((x: number, y: number) => void) | null>(null);
+  const pointerMovedDuringAnimatingRef = useRef(false);
   const prevAnimatingRef = useRef(animating);
   const searchProfilePinned = searchProfilePin !== null;
 
@@ -188,15 +189,20 @@ export function GuestBookHoverProvider({
   useEffect(() => {
     const wasAnimating = prevAnimatingRef.current;
     prevAnimatingRef.current = animating;
+    if (animating) {
+      pointerMovedDuringAnimatingRef.current = false;
+      return;
+    }
     if (
       wasAnimating &&
-      !animating &&
       spreadOpen &&
-      !searchProfilePinned
+      !searchProfilePinned &&
+      pointerMovedDuringAnimatingRef.current
     ) {
       const ptr = lastPointerRef.current;
       if (ptr) probeHoverAtRef.current?.(ptr.x, ptr.y);
     }
+    pointerMovedDuringAnimatingRef.current = false;
   }, [animating, spreadOpen, searchProfilePinned]);
 
   useEffect(
@@ -336,6 +342,7 @@ export function GuestBookHoverProvider({
         "[data-guest-book-drawing]",
       );
       if (!el || !spread.contains(el)) return;
+      if (!el.matches(":focus-visible")) return;
 
       if (leaveGraceTimerRef.current !== null) {
         window.clearTimeout(leaveGraceTimerRef.current);
@@ -419,6 +426,9 @@ export function GuestBookHoverProvider({
 
     const onPointerMove = (event: PointerEvent) => {
       lastPointerRef.current = { x: event.clientX, y: event.clientY };
+      if (animating) {
+        pointerMovedDuringAnimatingRef.current = true;
+      }
 
       const spread = spreadRef.current;
       if (!spread) return;
@@ -449,7 +459,15 @@ export function GuestBookHoverProvider({
         event.clientX,
         event.clientY,
       );
-      if (drawingEl) return;
+      if (drawingEl) {
+        const turnable =
+          drawingEl.classList.contains(
+            "guest-book-page__scatter-item--turnable",
+          ) ||
+          drawingEl.classList.contains("guest-book-page__full-bleed--turnable");
+        if (turnable) clearHover();
+        return;
+      }
 
       if (shownDrawingIdRef.current !== null) {
         scheduleClearHover();
