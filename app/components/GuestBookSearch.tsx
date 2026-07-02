@@ -20,6 +20,7 @@ import {
 } from "@/lib/memento/guestBookPages";
 import { mementoAvatarUrl } from "@/lib/memento/mementoAvatarUrl";
 import {
+  GUEST_BOOK_SEARCH_OPTION_PERSIST_MS,
   GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS,
   GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS,
   guestBookPause,
@@ -32,7 +33,7 @@ type GuestBookSearchProps = {
   /** Open spread step, or null when the book is closed. */
   spreadStep: number | null;
   onOpenChange?: (open: boolean) => void;
-  /** Demo route: Enter gets scale + delay; click gets delay only before riffle. */
+  /** Demo route: Enter scales the pill; click scales the results panel only. */
   demoSearchSubmit?: boolean;
   /** Focus the search field on mount (demo route). */
   autoFocus?: boolean;
@@ -107,6 +108,7 @@ export default function GuestBookSearch({
   const [activeIndex, setActiveIndex] = useState(0);
   const [tailFadeIndex, setTailFadeIndex] = useState<number | null>(null);
   const [pillPulsing, setPillPulsing] = useState(false);
+  const [panelPulsing, setPanelPulsing] = useState(false);
   const [submitWaiting, setSubmitWaiting] = useState(false);
   const submitPulseLockRef = useRef(false);
 
@@ -213,14 +215,22 @@ export default function GuestBookSearch({
 
       submitPulseLockRef.current = true;
       setSubmitWaiting(true);
-      setOpen(false);
-      setQuery("");
-      inputRef.current?.blur();
 
       if (viaEnter) {
+        setOpen(false);
+        setQuery("");
+        inputRef.current?.blur();
         setPillPulsing(true);
         await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS);
         setPillPulsing(false);
+      } else {
+        setPanelPulsing(true);
+        await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS);
+        await guestBookPause(GUEST_BOOK_SEARCH_OPTION_PERSIST_MS);
+        setPanelPulsing(false);
+        setOpen(false);
+        setQuery("");
+        inputRef.current?.blur();
       }
 
       await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS);
@@ -276,7 +286,18 @@ export default function GuestBookSearch({
       </label>
 
       {showPanel ? (
-        <div className="guest-book-search__panel guest-book-search__panel--enter">
+        <div
+          className={`guest-book-search__panel guest-book-search__panel--enter${
+            panelPulsing ? " guest-book-search__panel--submit-pulse" : ""
+          }`}
+          style={
+            panelPulsing
+              ? ({
+                  "--guest-book-search-submit-pulse-ms": `${GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS}ms`,
+                } as React.CSSProperties)
+              : undefined
+          }
+        >
           <ul
             ref={listRef}
             id={`${listId}-listbox`}
@@ -322,19 +343,21 @@ export default function GuestBookSearch({
                   aria-selected={index === clampedActiveIndex}
                   data-search-option
                   data-search-option-index={index}
-                  className={
+                  className={[
+                    "guest-book-search__option-box",
+                    index === clampedActiveIndex
+                      ? "guest-book-search__option-box--active"
+                      : "",
                     index === visibleTailFadeIndex
                       ? "guest-book-search__item--tail-fade"
-                      : undefined
-                  }
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 >
                   <button
                     type="button"
-                    className={`guest-book-search__option${
-                      index === clampedActiveIndex
-                        ? " guest-book-search__option--active"
-                        : ""
-                    }`}
+                    className="guest-book-search__option"
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectEntry(entry, false)}
                   >

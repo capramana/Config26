@@ -24,7 +24,7 @@ import "./GuestBook.css";
 
 type GuestBookProps = {
   pages?: GuestBookPageContent[];
-  /** Demo route: Enter scales then delays; click delays only. Also autofocus + faster open hint. */
+  /** Demo route: Enter scales search pill; click scales results panel only. */
   demo?: boolean;
 };
 

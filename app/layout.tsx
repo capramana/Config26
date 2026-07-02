@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AgentationWrapper from "@/app/components/AgentationWrapper";
 import { geistMono, zalandoSans } from "./fonts";
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
         className={`${zalandoSans.variable} ${zalandoSans.className} ${geistMono.variable} antialiased`}
       >
         {children}
+        <AgentationWrapper />
       </body>
     </html>
   );

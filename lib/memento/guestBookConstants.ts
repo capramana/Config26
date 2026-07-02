@@ -9,7 +9,9 @@ export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_UP_MS = 40;
 export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS =
   GUEST_BOOK_SEARCH_SUBMIT_PULSE_DOWN_MS + GUEST_BOOK_SEARCH_SUBMIT_PULSE_UP_MS;
 /** After submit (scale on Enter, or click), before navigation/riffle — demo route. */
-export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS = 500;
+export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS = 1000;
+/** Demo click: keep the results panel up after the option pulse. */
+export const GUEST_BOOK_SEARCH_OPTION_PERSIST_MS = 100;
 export const GUEST_BOOK_SEARCH_SUBMIT_BEFORE_RIFFLE_MS =
   GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS + GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS;
 export const GUEST_BOOK_ANIMATION_BUFFER_MS = 50;
