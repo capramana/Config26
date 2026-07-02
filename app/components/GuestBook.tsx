@@ -10,6 +10,7 @@ import {
 import {
   GUEST_BOOK_BACK_CLOSED_STEP,
   GUEST_BOOK_CLICK_HINT_FADE_MS,
+  GUEST_BOOK_DEMO_FRONT_COVER_IDLE_HINT_MS,
   GUEST_BOOK_FRONT_COVER_IDLE_HINT_MS,
   isGuestBookInteractiveTarget,
 } from "@/lib/memento/guestBookConstants";
@@ -23,9 +24,11 @@ import "./GuestBook.css";
 
 type GuestBookProps = {
   pages?: GuestBookPageContent[];
+  /** Demo route: search pulse on click + enter, faster hints, autofocus search. */
+  demo?: boolean;
 };
 
-export default function GuestBook({ pages = [] }: GuestBookProps) {
+export default function GuestBook({ pages = [], demo = false }: GuestBookProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const spreadRef = useRef<HTMLDivElement>(null);
   const searchOpenRef = useRef(false);
@@ -217,11 +220,15 @@ export default function GuestBook({ pages = [] }: GuestBookProps) {
     clearFrontCoverIdleTimer();
     if (!frontCoverIdle) return;
 
+    const delayMs = demo
+      ? GUEST_BOOK_DEMO_FRONT_COVER_IDLE_HINT_MS
+      : GUEST_BOOK_FRONT_COVER_IDLE_HINT_MS;
+
     frontCoverIdleTimerRef.current = window.setTimeout(() => {
       frontCoverIdleTimerRef.current = null;
       setShowFrontCoverHint(true);
-    }, GUEST_BOOK_FRONT_COVER_IDLE_HINT_MS);
-  }, [clearFrontCoverIdleTimer, frontCoverIdle]);
+    }, delayMs);
+  }, [clearFrontCoverIdleTimer, demo, frontCoverIdle]);
 
   const resetFrontCoverIdleHint = useCallback(() => {
     clearFrontCoverIdleTimer();
@@ -301,12 +308,17 @@ export default function GuestBook({ pages = [] }: GuestBookProps) {
       pages={pages}
       {...searchProps}
     >
-      <div ref={rootRef} className="guest-book-root">
+      <div
+        ref={rootRef}
+        className={`guest-book-root${demo ? " guest-book-root--demo" : ""}`}
+      >
         <GuestBookSearch
           pages={pages}
           onSelect={navigateToEntry}
           navigating={searchNavigating}
           spreadStep={spreadOpen && interactStep >= 1 ? interactStep : null}
+          submitPulseOnSelect={demo}
+          autoFocus={demo}
           onOpenChange={(open) => {
             searchOpenRef.current = open;
           }}
@@ -367,6 +379,7 @@ export default function GuestBook({ pages = [] }: GuestBookProps) {
                       <LeatherMarginPageFace
                         pageNumber={flatRightPage}
                         pageContents={pages}
+                        layoutPaused={animating}
                         {...searchProps}
                       />
                     </div>

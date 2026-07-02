@@ -53,6 +53,21 @@ export type PlacedGuestBookDrawing = {
   height: number;
 };
 
+const scatterPlacementsCache = new Map<string, PlacedGuestBookDrawing[]>();
+
+export function readGuestBookScatterCache(
+  layoutKey: string,
+): PlacedGuestBookDrawing[] | null {
+  return scatterPlacementsCache.get(layoutKey) ?? null;
+}
+
+export function writeGuestBookScatterCache(
+  layoutKey: string,
+  placements: PlacedGuestBookDrawing[],
+): void {
+  scatterPlacementsCache.set(layoutKey, placements);
+}
+
 type Rect = {
   x: number;
   y: number;

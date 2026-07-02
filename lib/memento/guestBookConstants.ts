@@ -3,8 +3,19 @@ export const GUEST_BOOK_BACK_CLOSED_STEP = -1;
 export const GUEST_BOOK_TURN_MS = 450;
 export const GUEST_BOOK_COVER_TURN_MS = 600;
 export const GUEST_BOOK_SEARCH_FLIP_STAGGER_RATIO = 0.15;
+/** Enter-to-submit: scale down/up, then pause before riffle (Enter only). */
+export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DOWN_MS = 75;
+export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_UP_MS = 40;
+export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS =
+  GUEST_BOOK_SEARCH_SUBMIT_PULSE_DOWN_MS + GUEST_BOOK_SEARCH_SUBMIT_PULSE_UP_MS;
+/** After the pill pulse finishes, before navigation/riffle. */
+export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS = 200;
+export const GUEST_BOOK_SEARCH_SUBMIT_BEFORE_RIFFLE_MS =
+  GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS + GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS;
 export const GUEST_BOOK_ANIMATION_BUFFER_MS = 50;
 export const GUEST_BOOK_FRONT_COVER_IDLE_HINT_MS = 15_000;
+/** Demo route: surface the open hint sooner for live walkthroughs. */
+export const GUEST_BOOK_DEMO_FRONT_COVER_IDLE_HINT_MS = 2_000;
 export const GUEST_BOOK_CLICK_HINT_FADE_MS = 250;
 export const GUEST_BOOK_NAVIGATION_WAIT_TIMEOUT_MS = 30_000;
 

@@ -190,12 +190,14 @@ export function GuestBookSheet({
       dismissBackCover,
     ],
   );
+  const layoutPaused = animating || searchFlip !== null;
   const pageFace = (pageNumber: number, leatherMargin = false) => (
     <GuestBookSheetPageFace
       pageNumber={pageNumber}
       pageContents={pageContents}
       leatherMargin={leatherMargin}
       bookStep={step}
+      layoutPaused={layoutPaused}
       {...searchProps}
       {...guestBookPageInteraction(pageNumber, interactionCtx)}
     />
@@ -417,6 +419,7 @@ export function BackCoverFlipper({
             pageContents={pageContents}
             leatherMargin
             bookStep={step}
+            layoutPaused={animating || searchFlip !== null}
             searchHighlight={searchHighlight}
             searchFlip={searchFlip}
             searchRiffleMs={searchRiffleMs}

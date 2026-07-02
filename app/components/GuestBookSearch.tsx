@@ -19,6 +19,11 @@ import {
   type GuestBookSearchEntry,
 } from "@/lib/memento/guestBookPages";
 import { mementoAvatarUrl } from "@/lib/memento/mementoAvatarUrl";
+import {
+  GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS,
+  GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS,
+  guestBookPause,
+} from "@/lib/memento/guestBookConstants";
 
 type GuestBookSearchProps = {
   pages: GuestBookPageContent[];
@@ -27,6 +32,10 @@ type GuestBookSearchProps = {
   /** Open spread step, or null when the book is closed. */
   spreadStep: number | null;
   onOpenChange?: (open: boolean) => void;
+  /** Scale + post-pulse delay before navigate (demo route only). */
+  submitPulseOnSelect?: boolean;
+  /** Focus the search field on mount (demo route). */
+  autoFocus?: boolean;
 };
 
 const SEARCH_RESULT_LIMIT = 50;
@@ -86,6 +95,8 @@ export default function GuestBookSearch({
   navigating,
   spreadStep,
   onOpenChange,
+  submitPulseOnSelect = false,
+  autoFocus = false,
 }: GuestBookSearchProps) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +106,8 @@ export default function GuestBookSearch({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [tailFadeIndex, setTailFadeIndex] = useState<number | null>(null);
+  const [pillPulsing, setPillPulsing] = useState(false);
+  const submitPulseLockRef = useRef(false);
 
   const searchIndex = useMemo(() => buildGuestBookSearchIndex(pages), [pages]);
   const matches = useMemo(() => {
@@ -143,6 +156,14 @@ export default function GuestBookSearch({
   }, [open, onOpenChange]);
 
   useEffect(() => {
+    if (!autoFocus) return;
+    const frameId = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [autoFocus]);
+
+  useEffect(() => {
     if (!open) return;
 
     const onPointerDown = (event: MouseEvent) => {
@@ -185,27 +206,61 @@ export default function GuestBookSearch({
     [updateTailFade],
   );
 
-  const pick = (entry: GuestBookSearchEntry) => {
-    onSelect(entry);
-    setQuery("");
-    setOpen(false);
-    inputRef.current?.blur();
-  };
+  const runSubmitPulseThen = useCallback(
+    async (action: () => void) => {
+      if (navigating || submitPulseLockRef.current) return;
+
+      submitPulseLockRef.current = true;
+      setPillPulsing(true);
+      setOpen(false);
+      setQuery("");
+      inputRef.current?.blur();
+
+      await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS);
+      await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS);
+
+      setPillPulsing(false);
+      submitPulseLockRef.current = false;
+      action();
+    },
+    [navigating],
+  );
+
+  const selectEntry = useCallback(
+    (entry: GuestBookSearchEntry) => {
+      if (navigating || pillPulsing) return;
+      if (submitPulseOnSelect) {
+        void runSubmitPulseThen(() => onSelect(entry));
+        return;
+      }
+      onSelect(entry);
+      setQuery("");
+      setOpen(false);
+      inputRef.current?.blur();
+    },
+    [
+      navigating,
+      onSelect,
+      pillPulsing,
+      runSubmitPulseThen,
+      submitPulseOnSelect,
+    ],
+  );
 
   const pickRandomOffSpread = () => {
-    if (navigating) return;
+    if (navigating || pillPulsing) return;
     const entry = guestBookRandomSearchEntryOffSpread(searchIndex, spreadStep);
-    if (entry) pick(entry);
+    if (entry) selectEntry(entry);
   };
 
   const submitSearch = () => {
-    if (navigating) return;
+    if (navigating || pillPulsing) return;
     if (showNoMatchPick) {
       pickRandomOffSpread();
       return;
     }
     const entry = matches[clampedActiveIndex];
-    if (entry) pick(entry);
+    if (entry) selectEntry(entry);
   };
 
   return (
@@ -233,7 +288,7 @@ export default function GuestBookSearch({
                 <button
                   type="button"
                   className="guest-book-search__option guest-book-search__option--active guest-book-search__empty-pick"
-                  disabled={navigating}
+                  disabled={navigating || pillPulsing}
                   onClick={pickRandomOffSpread}
                 >
                   <DiceFive
@@ -275,7 +330,7 @@ export default function GuestBookSearch({
                         : ""
                     }`}
                     onMouseEnter={() => setActiveIndex(index)}
-                    onClick={() => pick(entry)}
+                    onClick={() => selectEntry(entry)}
                   >
                     <GuestBookSearchOptionAvatar
                       key={entry.id}
@@ -302,7 +357,16 @@ export default function GuestBookSearch({
       ) : null}
 
       <div
-        className="guest-book-search__pill"
+        className={`guest-book-search__pill${
+          pillPulsing ? " guest-book-search__pill--submit-pulse" : ""
+        }`}
+        style={
+          pillPulsing
+            ? ({
+                "--guest-book-search-submit-pulse-ms": `${GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS}ms`,
+              } as React.CSSProperties)
+            : undefined
+        }
         onClick={() => inputRef.current?.focus()}
       >
         <span className="guest-book-search__icon" aria-hidden>
@@ -326,7 +390,7 @@ export default function GuestBookSearch({
           }
           placeholder="Search"
           value={query}
-          disabled={navigating}
+          disabled={navigating || pillPulsing}
           autoComplete="off"
           spellCheck={false}
           onChange={(event) => {

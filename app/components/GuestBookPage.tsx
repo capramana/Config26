@@ -12,7 +12,9 @@ import {
   GUEST_BOOK_SCATTER_ALGO_VERSION,
   GUEST_BOOK_MIN_PAGE_FACE_PX,
   measureGuestBookPageFace,
+  readGuestBookScatterCache,
   scatterGuestBookDrawings,
+  writeGuestBookScatterCache,
   type PlacedGuestBookDrawing,
 } from "@/lib/memento/guestBookScatterLayout";
 import { pageOuterClass } from "@/lib/memento/guestBookFlip";
@@ -41,21 +43,22 @@ export function GuestBookPage({
   onPageDismiss,
   onDrawingClick,
   bookStep,
+  layoutPaused = false,
 }: {
   number: number;
   content: GuestBookPageContent | null;
   onPageDismiss?: () => void;
   onDrawingClick?: () => void;
   bookStep?: number;
+  layoutPaused?: boolean;
 } & GuestBookPageSearchProps) {
   const pageRef = useRef<HTMLDivElement>(null);
   const layoutRunIdRef = useRef(0);
+  const layoutPausedRef = useRef(layoutPaused);
   const drawingSizeCacheRef = useRef(
     new Map<string, { width: number; height: number }>(),
   );
-  const [placements, setPlacements] = useState<PlacedGuestBookDrawing[] | null>(
-    null,
-  );
+  const pageLabel = content?.date ? formatGuestBookPageDate(content.date) : null;
   const drawings = useMemo(
     () => content?.drawings ?? [],
     [content?.drawings],
@@ -65,8 +68,11 @@ export function GuestBookPage({
     drawings.length === 1 && isGuestBookFullPageDrawing(drawings[0].id)
       ? drawings[0]
       : null;
-  const pageLabel = content?.date ? formatGuestBookPageDate(content.date) : null;
   const layoutKey = `${GUEST_BOOK_SCATTER_ALGO_VERSION}:${number}:${drawings.map((drawing) => drawing.id).join(",")}`;
+  const placementsRef = useRef<PlacedGuestBookDrawing[] | null>(null);
+  const [placements, setPlacements] = useState<PlacedGuestBookDrawing[] | null>(
+    () => readGuestBookScatterCache(layoutKey),
+  );
   const highlightStyleFor = (drawingId: string) =>
     guestBookDrawingSearchHighlightStyle(
       drawingId,
@@ -86,21 +92,36 @@ export function GuestBookPage({
   const fullBleedTurnClass = onDrawingClick ? " guest-book-page__full-bleed--turnable" : "";
 
   useLayoutEffect(() => {
+    layoutPausedRef.current = layoutPaused;
+  }, [layoutPaused]);
+
+  useLayoutEffect(() => {
     if (!hasDrawings || fullPageDrawing) return;
 
     const page = pageRef.current;
     if (!page) return;
 
+    const cached = readGuestBookScatterCache(layoutKey);
+    placementsRef.current = cached ?? placementsRef.current ?? placements;
+
     let cancelled = false;
     const sizeCache = drawingSizeCacheRef.current;
 
+    const commitPlacements = (next: PlacedGuestBookDrawing[]) => {
+      placementsRef.current = next;
+      writeGuestBookScatterCache(layoutKey, next);
+      setPlacements(next);
+    };
+
     const runLayout = async () => {
+      if (layoutPausedRef.current && placementsRef.current !== null) return;
+
       const runId = ++layoutRunIdRef.current;
 
       const sizes = await Promise.all(
         drawings.map(async (drawing) => {
-          const cached = sizeCache.get(drawing.id);
-          if (cached) return cached;
+          const cachedSize = sizeCache.get(drawing.id);
+          if (cachedSize) return cachedSize;
 
           const size = await loadDrawingNaturalSize(
             `/api/memento/drawing/${drawing.id}`,
@@ -119,6 +140,7 @@ export function GuestBookPage({
       );
 
       if (cancelled || runId !== layoutRunIdRef.current) return;
+      if (layoutPausedRef.current && placementsRef.current !== null) return;
 
       const { width: pageWidth, height: pageHeight } = measureGuestBookPageFace(page);
       if (
@@ -128,7 +150,7 @@ export function GuestBookPage({
         return;
       }
 
-      setPlacements(
+      commitPlacements(
         scatterGuestBookDrawings({
           pageNumber: number,
           drawings,
@@ -143,6 +165,7 @@ export function GuestBookPage({
 
     let frameId = 0;
     const observer = new ResizeObserver(() => {
+      if (layoutPausedRef.current && placementsRef.current !== null) return;
       if (frameId !== 0) cancelAnimationFrame(frameId);
       frameId = requestAnimationFrame(() => {
         frameId = 0;
@@ -158,7 +181,15 @@ export function GuestBookPage({
       if (frameId !== 0) cancelAnimationFrame(frameId);
       observer.disconnect();
     };
-  }, [drawings, fullPageDrawing, hasDrawings, layoutKey, number, bookStep]);
+  }, [
+    drawings,
+    fullPageDrawing,
+    hasDrawings,
+    layoutKey,
+    layoutPaused,
+    number,
+    bookStep,
+  ]);
 
   return (
     <div
@@ -250,6 +281,7 @@ export function GuestBookSheetPageFace({
   searchHighlight,
   searchFlip,
   searchRiffleMs,
+  layoutPaused = false,
 }: {
   pageNumber: number;
   pageContents: GuestBookPageContent[];
@@ -257,9 +289,10 @@ export function GuestBookSheetPageFace({
   onPageDismiss?: () => void;
   onDrawingClick?: () => void;
   bookStep: number;
+  layoutPaused?: boolean;
 } & GuestBookPageSearchProps) {
   const searchProps = { searchHighlight, searchFlip, searchRiffleMs };
-  const interactionProps = { onPageDismiss, onDrawingClick, bookStep };
+  const interactionProps = { onPageDismiss, onDrawingClick, bookStep, layoutPaused };
 
   if (leatherMargin) {
     return (
@@ -292,12 +325,14 @@ export function LeatherMarginPageFace({
   onPageDismiss,
   onDrawingClick,
   bookStep,
+  layoutPaused = false,
 }: {
   pageNumber: number;
   pageContents: GuestBookPageContent[];
   onPageDismiss?: () => void;
   onDrawingClick?: () => void;
   bookStep?: number;
+  layoutPaused?: boolean;
 } & GuestBookPageSearchProps) {
   return (
     <>
@@ -314,6 +349,7 @@ export function LeatherMarginPageFace({
           onPageDismiss={onPageDismiss}
           onDrawingClick={onDrawingClick}
           bookStep={bookStep}
+          layoutPaused={layoutPaused}
         />
       </div>
     </>

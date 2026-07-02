@@ -800,6 +800,28 @@
     inset 0 4px 4px #ffffff,
     0 0 0 1px rgba(0, 0, 0, 0.075),
     0 4px 8px rgba(0, 0, 0, 0.05);
+  transform-origin: center center;
+}
+
+.guest-book-search__pill--submit-pulse {
+  animation: guest-book-search-pill-submit-pulse
+    var(--guest-book-search-submit-pulse-ms, 115ms) ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes guest-book-search-pill-submit-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  /* 75ms down / 115ms total */
+  65.217% {
+    transform: scale(0.92);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .guest-book-search__icon {
