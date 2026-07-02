@@ -15,7 +15,7 @@ export const GUEST_BOOK_SEARCH_SUBMIT_BEFORE_RIFFLE_MS =
 export const GUEST_BOOK_ANIMATION_BUFFER_MS = 50;
 export const GUEST_BOOK_FRONT_COVER_IDLE_HINT_MS = 15_000;
 /** Demo route: surface the open hint sooner for live walkthroughs. */
-export const GUEST_BOOK_DEMO_FRONT_COVER_IDLE_HINT_MS = 2_000;
+export const GUEST_BOOK_DEMO_FRONT_COVER_IDLE_HINT_MS = 15_000;
 export const GUEST_BOOK_CLICK_HINT_FADE_MS = 250;
 export const GUEST_BOOK_NAVIGATION_WAIT_TIMEOUT_MS = 30_000;
 
