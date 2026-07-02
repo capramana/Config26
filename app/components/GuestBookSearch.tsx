@@ -32,8 +32,8 @@ type GuestBookSearchProps = {
   /** Open spread step, or null when the book is closed. */
   spreadStep: number | null;
   onOpenChange?: (open: boolean) => void;
-  /** Scale + post-pulse delay before navigate (demo route only). */
-  submitPulseOnSelect?: boolean;
+  /** Scale + post-pulse delay before navigate on Enter (demo route only). */
+  submitPulseOnEnter?: boolean;
   /** Focus the search field on mount (demo route). */
   autoFocus?: boolean;
 };
@@ -95,7 +95,7 @@ export default function GuestBookSearch({
   navigating,
   spreadStep,
   onOpenChange,
-  submitPulseOnSelect = false,
+  submitPulseOnEnter = false,
   autoFocus = false,
 }: GuestBookSearchProps) {
   const listId = useId();
@@ -227,9 +227,9 @@ export default function GuestBookSearch({
   );
 
   const selectEntry = useCallback(
-    (entry: GuestBookSearchEntry) => {
+    (entry: GuestBookSearchEntry, viaEnter: boolean) => {
       if (navigating || pillPulsing) return;
-      if (submitPulseOnSelect) {
+      if (viaEnter && submitPulseOnEnter) {
         void runSubmitPulseThen(() => onSelect(entry));
         return;
       }
@@ -243,24 +243,24 @@ export default function GuestBookSearch({
       onSelect,
       pillPulsing,
       runSubmitPulseThen,
-      submitPulseOnSelect,
+      submitPulseOnEnter,
     ],
   );
 
-  const pickRandomOffSpread = () => {
+  const pickRandomOffSpread = (viaEnter: boolean) => {
     if (navigating || pillPulsing) return;
     const entry = guestBookRandomSearchEntryOffSpread(searchIndex, spreadStep);
-    if (entry) selectEntry(entry);
+    if (entry) selectEntry(entry, viaEnter);
   };
 
   const submitSearch = () => {
     if (navigating || pillPulsing) return;
     if (showNoMatchPick) {
-      pickRandomOffSpread();
+      pickRandomOffSpread(true);
       return;
     }
     const entry = matches[clampedActiveIndex];
-    if (entry) selectEntry(entry);
+    if (entry) selectEntry(entry, true);
   };
 
   return (
@@ -289,7 +289,7 @@ export default function GuestBookSearch({
                   type="button"
                   className="guest-book-search__option guest-book-search__option--active guest-book-search__empty-pick"
                   disabled={navigating || pillPulsing}
-                  onClick={pickRandomOffSpread}
+                  onClick={() => pickRandomOffSpread(false)}
                 >
                   <DiceFive
                     className="guest-book-search__empty-pick-icon"
@@ -330,7 +330,7 @@ export default function GuestBookSearch({
                         : ""
                     }`}
                     onMouseEnter={() => setActiveIndex(index)}
-                    onClick={() => selectEntry(entry)}
+                    onClick={() => selectEntry(entry, false)}
                   >
                     <GuestBookSearchOptionAvatar
                       key={entry.id}

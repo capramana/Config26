@@ -24,7 +24,7 @@ import "./GuestBook.css";
 
 type GuestBookProps = {
   pages?: GuestBookPageContent[];
-  /** Demo route: search pulse on click + enter, faster hints, autofocus search. */
+  /** Demo route: search pulse on Enter, faster hints, autofocus search. */
   demo?: boolean;
 };
 
@@ -317,7 +317,7 @@ export default function GuestBook({ pages = [], demo = false }: GuestBookProps) 
           onSelect={navigateToEntry}
           navigating={searchNavigating}
           spreadStep={spreadOpen && interactStep >= 1 ? interactStep : null}
-          submitPulseOnSelect={demo}
+          submitPulseOnEnter={demo}
           autoFocus={demo}
           onOpenChange={(open) => {
             searchOpenRef.current = open;
