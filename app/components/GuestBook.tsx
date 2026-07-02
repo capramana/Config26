@@ -63,7 +63,7 @@ export default function GuestBook({ pages = [], demo = false }: GuestBookProps) 
     closeBook,
     isBusy,
     settleStep,
-  } = useGuestBookNavigation({ maxStep: layout.maxStep });
+  } = useGuestBookNavigation({ maxStep: layout.maxStep, demo });
 
   const renderState = useMemo(
     () => getGuestBookRenderState(step, prevStep, layout, searchFlip, searchRiffleMs),

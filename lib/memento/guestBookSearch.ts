@@ -11,6 +11,9 @@ export const GUEST_BOOK_HOVER_FADE_OUT_MS = 200;
 /** Matches `.guest-book-page__scatter-item` opacity / filter transition. */
 export const GUEST_BOOK_HIGHLIGHT_FADE_MS = 500;
 
+/** How long search highlight + profile stay at full strength before dismiss. */
+export const GUEST_BOOK_SEARCH_HIGHLIGHT_HOLD_MS = 750;
+
 const SEARCH_HIGHLIGHT_DIM = 0.25;
 const SEARCH_HIGHLIGHT_BLUR_PX = 2;
 
@@ -89,10 +92,12 @@ export function guestBookSearchHighlightForEntry(
   };
 }
 
-/** Ms until dim/blur dismiss — ramp (CSS or flip scrub) then hold at full strength. */
-export function guestBookSearchHighlightDismissDelay(flipTotalMs: number): number {
-  const rampMs = flipTotalMs > 0 ? flipTotalMs : GUEST_BOOK_HIGHLIGHT_FADE_MS;
-  return rampMs + GUEST_BOOK_HIGHLIGHT_FADE_MS;
+/** Ms until dim/blur dismiss — riffle ramp (if any) then hold at full strength. */
+export function guestBookSearchHighlightDismissDelay(
+  flipTotalMs: number,
+  holdMs = GUEST_BOOK_SEARCH_HIGHLIGHT_HOLD_MS,
+): number {
+  return flipTotalMs + holdMs;
 }
 
 export function guestBookDrawingSearchHighlightStyle(

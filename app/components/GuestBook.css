@@ -88,6 +88,14 @@
   transition: none;
 }
 
+.guest-book-contributor--hover:not(.guest-book-contributor--hover-exit):not(
+    .guest-book-contributor--fade-out
+  ) {
+  filter:
+    drop-shadow(0 2px 10px rgba(0, 0, 0, 0.08))
+    drop-shadow(0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
 .guest-book-contributor--hover-exit {
   z-index: 99;
 }

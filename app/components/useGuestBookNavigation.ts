@@ -12,6 +12,7 @@ import type { GuestBookSearchEntry } from "@/lib/memento/guestBookPages";
 import {
   GUEST_BOOK_BACK_CLOSED_STEP,
   GUEST_BOOK_COVER_TURN_MS,
+  GUEST_BOOK_DEMO_SEARCH_HIGHLIGHT_HOLD_MS,
   GUEST_BOOK_NAVIGATION_WAIT_TIMEOUT_MS,
   GUEST_BOOK_SEARCH_FLIP_STAGGER_RATIO,
   GUEST_BOOK_TURN_MS,
@@ -23,6 +24,7 @@ import {
   clearGuestBookTimeoutRef,
   GUEST_BOOK_HIGHLIGHT_FADE_MS,
   GUEST_BOOK_HOVER_FADE_IN_MS,
+  GUEST_BOOK_SEARCH_HIGHLIGHT_HOLD_MS,
   guestBookSearchFlipStaggerMs,
   guestBookSearchFlipTotalMs,
   guestBookSearchFlipWindowProgress,
@@ -41,9 +43,13 @@ import {
 
 export type UseGuestBookNavigationOptions = {
   maxStep: number;
+  demo?: boolean;
 };
 
-export function useGuestBookNavigation({ maxStep }: UseGuestBookNavigationOptions) {
+export function useGuestBookNavigation({
+  maxStep,
+  demo = false,
+}: UseGuestBookNavigationOptions) {
   const [step, setStep] = useState(0);
   const [prevStep, setPrevStep] = useState(0);
   const stepRef = useRef(step);
@@ -68,6 +74,9 @@ export function useGuestBookNavigation({ maxStep }: UseGuestBookNavigationOption
   const navigationGenerationRef = useRef(0);
   const mountedRef = useRef(true);
   const searchProfilePinned = searchProfilePin !== null;
+  const searchHighlightHoldMs = demo
+    ? GUEST_BOOK_DEMO_SEARCH_HIGHLIGHT_HOLD_MS
+    : GUEST_BOOK_SEARCH_HIGHLIGHT_HOLD_MS;
 
   const playRiffleSounds = useCallback((flipCount: number, durationMs: number) => {
     if (flipCount >= 2) {
@@ -315,7 +324,9 @@ export function useGuestBookNavigation({ maxStep }: UseGuestBookNavigationOption
         if (entry) {
           pinSearchProfile(entry, true);
           applySearchHighlight(entry);
-          scheduleSearchHighlightDismiss(guestBookSearchHighlightDismissDelay(0));
+          scheduleSearchHighlightDismiss(
+            guestBookSearchHighlightDismissDelay(0, searchHighlightHoldMs),
+          );
         }
         return;
       }
@@ -340,7 +351,7 @@ export function useGuestBookNavigation({ maxStep }: UseGuestBookNavigationOption
 
         applySearchHighlight(entry);
         scheduleSearchHighlightDismiss(
-          guestBookSearchHighlightDismissDelay(flipTotalMs),
+          guestBookSearchHighlightDismissDelay(flipTotalMs, searchHighlightHoldMs),
         );
 
         searchProfilePinDelayTimerRef.current = window.setTimeout(() => {
@@ -369,6 +380,7 @@ export function useGuestBookNavigation({ maxStep }: UseGuestBookNavigationOption
       scheduleSearchHighlightDismiss,
       clearSearchProfilePinDelayTimer,
       playRiffleSounds,
+      searchHighlightHoldMs,
     ],
   );
 

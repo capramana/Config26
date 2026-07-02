@@ -18,6 +18,8 @@ export const GUEST_BOOK_ANIMATION_BUFFER_MS = 50;
 export const GUEST_BOOK_FRONT_COVER_IDLE_HINT_MS = 15_000;
 /** Demo route: surface the open hint sooner for live walkthroughs. */
 export const GUEST_BOOK_DEMO_FRONT_COVER_IDLE_HINT_MS = 15_000;
+/** Demo route: longer search highlight + profile hold for walkthrough pacing. */
+export const GUEST_BOOK_DEMO_SEARCH_HIGHLIGHT_HOLD_MS = 1000;
 export const GUEST_BOOK_CLICK_HINT_FADE_MS = 250;
 export const GUEST_BOOK_NAVIGATION_WAIT_TIMEOUT_MS = 30_000;
 
