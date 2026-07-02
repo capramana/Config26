@@ -18,15 +18,16 @@ Conference memento: guestbook viewer and submission flow. Uses the **same Supaba
    npm run dev
    ```
 
-3. Open [http://localhost:3000](http://localhost:3000) (redirects to the guestbook).
+3. Open [http://localhost:3000](http://localhost:3000) for the guestbook.
 
 ## Routes
 
 | Path | Purpose |
 |------|---------|
+| `/` | Guestbook |
+| `/memento/book` | Redirects to `/` |
 | `/memento` | Leave your mark (drawing submission) |
-| `/memento/book` | Guestbook |
-| `/memento/confirm` | Post-submit confirmation |
+| `/memento/confirm` | Post-submit confirmation (dev only) |
 
 ## Deploy
 
