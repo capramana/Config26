@@ -8,8 +8,8 @@ export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DOWN_MS = 75;
 export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_UP_MS = 40;
 export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS =
   GUEST_BOOK_SEARCH_SUBMIT_PULSE_DOWN_MS + GUEST_BOOK_SEARCH_SUBMIT_PULSE_UP_MS;
-/** After the pill pulse finishes, before navigation/riffle. */
-export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS = 200;
+/** After submit (scale on Enter, or click), before navigation/riffle — demo route. */
+export const GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS = 500;
 export const GUEST_BOOK_SEARCH_SUBMIT_BEFORE_RIFFLE_MS =
   GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS + GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS;
 export const GUEST_BOOK_ANIMATION_BUFFER_MS = 50;

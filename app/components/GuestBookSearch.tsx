@@ -32,8 +32,8 @@ type GuestBookSearchProps = {
   /** Open spread step, or null when the book is closed. */
   spreadStep: number | null;
   onOpenChange?: (open: boolean) => void;
-  /** Scale + post-pulse delay before navigate on Enter (demo route only). */
-  submitPulseOnEnter?: boolean;
+  /** Demo route: Enter gets scale + delay; click gets delay only before riffle. */
+  demoSearchSubmit?: boolean;
   /** Focus the search field on mount (demo route). */
   autoFocus?: boolean;
 };
@@ -95,7 +95,7 @@ export default function GuestBookSearch({
   navigating,
   spreadStep,
   onOpenChange,
-  submitPulseOnEnter = false,
+  demoSearchSubmit = false,
   autoFocus = false,
 }: GuestBookSearchProps) {
   const listId = useId();
@@ -107,6 +107,7 @@ export default function GuestBookSearch({
   const [activeIndex, setActiveIndex] = useState(0);
   const [tailFadeIndex, setTailFadeIndex] = useState<number | null>(null);
   const [pillPulsing, setPillPulsing] = useState(false);
+  const [submitWaiting, setSubmitWaiting] = useState(false);
   const submitPulseLockRef = useRef(false);
 
   const searchIndex = useMemo(() => buildGuestBookSearchIndex(pages), [pages]);
@@ -206,20 +207,25 @@ export default function GuestBookSearch({
     [updateTailFade],
   );
 
-  const runSubmitPulseThen = useCallback(
-    async (action: () => void) => {
+  const runDemoNavigateThen = useCallback(
+    async (action: () => void, viaEnter: boolean) => {
       if (navigating || submitPulseLockRef.current) return;
 
       submitPulseLockRef.current = true;
-      setPillPulsing(true);
+      setSubmitWaiting(true);
       setOpen(false);
       setQuery("");
       inputRef.current?.blur();
 
-      await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS);
+      if (viaEnter) {
+        setPillPulsing(true);
+        await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_MS);
+        setPillPulsing(false);
+      }
+
       await guestBookPause(GUEST_BOOK_SEARCH_SUBMIT_PULSE_DELAY_MS);
 
-      setPillPulsing(false);
+      setSubmitWaiting(false);
       submitPulseLockRef.current = false;
       action();
     },
@@ -228,9 +234,9 @@ export default function GuestBookSearch({
 
   const selectEntry = useCallback(
     (entry: GuestBookSearchEntry, viaEnter: boolean) => {
-      if (navigating || pillPulsing) return;
-      if (viaEnter && submitPulseOnEnter) {
-        void runSubmitPulseThen(() => onSelect(entry));
+      if (navigating || submitWaiting) return;
+      if (demoSearchSubmit) {
+        void runDemoNavigateThen(() => onSelect(entry), viaEnter);
         return;
       }
       onSelect(entry);
@@ -239,22 +245,22 @@ export default function GuestBookSearch({
       inputRef.current?.blur();
     },
     [
+      demoSearchSubmit,
       navigating,
       onSelect,
-      pillPulsing,
-      runSubmitPulseThen,
-      submitPulseOnEnter,
+      runDemoNavigateThen,
+      submitWaiting,
     ],
   );
 
   const pickRandomOffSpread = (viaEnter: boolean) => {
-    if (navigating || pillPulsing) return;
+    if (navigating || submitWaiting) return;
     const entry = guestBookRandomSearchEntryOffSpread(searchIndex, spreadStep);
     if (entry) selectEntry(entry, viaEnter);
   };
 
   const submitSearch = () => {
-    if (navigating || pillPulsing) return;
+    if (navigating || submitWaiting) return;
     if (showNoMatchPick) {
       pickRandomOffSpread(true);
       return;
@@ -288,7 +294,7 @@ export default function GuestBookSearch({
                 <button
                   type="button"
                   className="guest-book-search__option guest-book-search__option--active guest-book-search__empty-pick"
-                  disabled={navigating || pillPulsing}
+                  disabled={navigating || submitWaiting}
                   onClick={() => pickRandomOffSpread(false)}
                 >
                   <DiceFive
@@ -390,7 +396,7 @@ export default function GuestBookSearch({
           }
           placeholder="Search"
           value={query}
-          disabled={navigating || pillPulsing}
+          disabled={navigating || submitWaiting}
           autoComplete="off"
           spellCheck={false}
           onChange={(event) => {
